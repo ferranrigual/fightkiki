@@ -1,32 +1,20 @@
-import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import cors from 'cors';
 
-const app = express();
-const httpServer = createServer(app);
-
-// Server startup timestamp
 const serverStartTime = new Date().toISOString();
 
-// Enable CORS for all routes
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'OPTIONS'],
-}));
-
-// Root + version endpoints
-app.get('/', (req, res) => {
-  res.json({ status: 'ok', server: 'fightkiki' });
-});
-
-app.get('/api/version', (req, res) => {
+function handleRequest(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.json({
-    timestamp: serverStartTime,
-    currentTime: new Date().toISOString(),
-  });
-});
+  res.setHeader('Content-Type', 'application/json');
+
+  if (req.url === '/') {
+    res.end(JSON.stringify({ status: 'ok', server: 'fightkiki' }));
+  } else if (req.url === '/api/version') {
+    res.end(JSON.stringify({ timestamp: serverStartTime, currentTime: new Date().toISOString() }));
+  }
+}
+
+const httpServer = createServer(handleRequest);
 
 const io = new Server(httpServer, {
   cors: {
