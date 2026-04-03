@@ -7,7 +7,12 @@ import { FightScene } from './FightScene.js';
 import { ResultScene } from './ResultScene.js';
 
 // Single shared socket for all scenes
-const socket = io();
+// Use Railway backend in production, localhost in dev
+const socketUrl = window.location.hostname === 'localhost'
+  ? 'http://localhost:3000'
+  : 'https://fightkiki.up.railway.app';
+
+const socket = io(socketUrl);
 
 const config = {
   type: Phaser.AUTO,
