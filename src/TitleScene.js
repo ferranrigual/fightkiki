@@ -50,22 +50,31 @@ export class TitleScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     this.socket.emit('create-room', ({ code }) => {
-      this.children.removeAll(true);
-      this.create(); // re-draw title
+      this.children.removeAll(true); // Clear everything
 
-      this.add.text(400, 290, 'Your Room Code', {
-        fontSize: '22px', fontFamily: 'Arial', color: '#aaa',
+      this.add.text(400, 150, 'Your Room Code', {
+        fontSize: '24px', fontFamily: 'Arial', color: '#aaa',
       }).setOrigin(0.5);
 
-      this.add.text(400, 350, code, {
+      this.add.text(400, 240, code, {
         fontSize: '72px', fontFamily: 'Arial Black, Arial', color: '#4fc3f7', fontStyle: 'bold',
       }).setOrigin(0.5);
 
-      const waiting = this.add.text(400, 440, 'Waiting for opponent...', {
+      const waiting = this.add.text(400, 380, 'Waiting for opponent...', {
         fontSize: '20px', fontFamily: 'Arial', color: '#888',
       }).setOrigin(0.5);
 
       this.tweens.add({ targets: waiting, alpha: 0.2, duration: 800, yoyo: true, repeat: -1 });
+
+      const backBtn = this.add.rectangle(400, 480, 160, 50, 0x444444).setInteractive({ useHandCursor: true });
+      this.add.text(400, 480, 'Back', {
+        fontSize: '24px', fontFamily: 'Arial', color: '#fff', fontStyle: 'bold',
+      }).setOrigin(0.5);
+
+      backBtn.on('pointerdown', () => {
+        this.socket.disconnect();
+        this.scene.start('TitleScene');
+      });
 
       this.socket.once('opponent-joined', () => {
         this.scene.start('NameScene', { player: 'p1' });
