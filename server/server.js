@@ -144,7 +144,7 @@ io.on('connection', (socket) => {
 });
 
 // SPA fallback — must be last so it doesn't shadow API routes or Socket.io
-app.get('*', (req, res) => {
+app.use((req, res) => {
   res.sendFile(join(__dirname, '..', 'dist', 'index.html'));
 });
 
