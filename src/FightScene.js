@@ -1,7 +1,6 @@
 import Phaser from 'phaser';
 import { resolveRound } from './combat.js';
-
-const MOVE_EMOJIS = { Punch: '\u{1F44A}', 'Low Kick': '\u{1F9B5}', Defend: '\u{1F6E1}' };
+import { MOVE_EMOJIS } from './moves.js';
 
 export class FightScene extends Phaser.Scene {
   constructor() {

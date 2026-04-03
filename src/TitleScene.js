@@ -22,7 +22,7 @@ export class TitleScene extends Phaser.Scene {
     const prompt = this.add.text(400, 450, 'Click to Start', {
       fontSize: '28px',
       fontFamily: 'Arial',
-      color: '#0f3460',
+      color: '#4fc3f7',
     }).setOrigin(0.5);
 
     this.tweens.add({

@@ -1,8 +1,10 @@
+import { MOVES } from './moves.js';
+
 // Moves that beat each other: Punch > Low Kick > Defend > Punch
 const WINS_AGAINST = {
-  Punch: 'Low Kick',
-  'Low Kick': 'Defend',
-  Defend: 'Punch',
+  [MOVES.PUNCH]: MOVES.LOW_KICK,
+  [MOVES.LOW_KICK]: MOVES.DEFEND,
+  [MOVES.DEFEND]: MOVES.PUNCH,
 };
 
 /**

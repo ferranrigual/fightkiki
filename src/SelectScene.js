@@ -1,8 +1,6 @@
 import Phaser from 'phaser';
+import { MOVE_LIST, MOVE_COLORS, MOVE_EMOJIS } from './moves.js';
 
-const MOVE_NAMES = ['Punch', 'Low Kick', 'Defend'];
-const MOVE_COLORS = { Punch: '#e94560', 'Low Kick': '#f5a623', Defend: '#0f3460' };
-const MOVE_EMOJIS = { Punch: '\u{1F44A}', 'Low Kick': '\u{1F9B5}', Defend: '\u{1F6E1}' };
 const TOTAL_MOVES = 5;
 
 export class SelectScene extends Phaser.Scene {
@@ -39,7 +37,7 @@ export class SelectScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     // Move buttons
-    MOVE_NAMES.forEach((move, i) => {
+    MOVE_LIST.forEach((move, i) => {
       const y = 180 + i * 90;
       const btn = this.add.rectangle(400, y, 300, 65, Phaser.Display.Color.HexStringToColor(MOVE_COLORS[move]).color)
         .setInteractive({ useHandCursor: true });
