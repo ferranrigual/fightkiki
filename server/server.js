@@ -1,20 +1,31 @@
 import { createServer } from 'http';
+import express from 'express';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import { Server } from 'socket.io';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const serverStartTime = new Date().toISOString();
 
-function handleRequest(req, res) {
+const app = express();
+
+// CORS headers for API routes
+app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Content-Type', 'application/json');
+  next();
+});
 
-  if (req.url === '/') {
-    res.end(JSON.stringify({ status: 'ok', server: 'fightkiki' }));
-  } else if (req.url === '/api/version') {
-    res.end(JSON.stringify({ timestamp: serverStartTime, currentTime: new Date().toISOString() }));
-  }
-}
+// Serve built frontend static files
+app.use(express.static(join(__dirname, '..', 'dist')));
 
-const httpServer = createServer(handleRequest);
+// API endpoints
+app.get('/api/version', (req, res) => {
+  res.json({ timestamp: serverStartTime, currentTime: new Date().toISOString() });
+});
+
+const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
   cors: {
@@ -132,5 +143,10 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
+// SPA fallback — must be last so it doesn't shadow API routes or Socket.io
+app.get('*', (req, res) => {
+  res.sendFile(join(__dirname, '..', 'dist', 'index.html'));
+});
+
+const PORT = process.env.PORT || 8080;
 httpServer.listen(PORT, () => console.log(`Server running on port ${PORT}`));
