@@ -15,8 +15,13 @@ app.use(cors({
   methods: ['GET', 'POST', 'OPTIONS'],
 }));
 
-// Version endpoint
+// Root + version endpoints
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', server: 'fightkiki' });
+});
+
 app.get('/api/version', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
   res.json({
     timestamp: serverStartTime,
     currentTime: new Date().toISOString(),
