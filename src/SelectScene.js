@@ -10,6 +10,8 @@ export class SelectScene extends Phaser.Scene {
 
   init(data) {
     this.player = data.player; // 'p1' or 'p2'
+    this.name = data.name;
+    this.opponentName = data.opponentName;
     this.selectedMoves = [];
   }
 
@@ -18,9 +20,8 @@ export class SelectScene extends Phaser.Scene {
 
     // Header
     const color = this.player === 'p1' ? '#4fc3f7' : '#ef5350';
-    const label = this.player === 'p1' ? 'Player 1' : 'Player 2';
 
-    this.add.text(400, 40, `${label} - Choose Your Moves`, {
+    this.add.text(400, 40, `${this.name} - Choose Your Moves`, {
       fontSize: '30px', fontFamily: 'Arial', color, fontStyle: 'bold',
     }).setOrigin(0.5);
 

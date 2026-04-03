@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { io } from 'socket.io-client';
 import { TitleScene } from './TitleScene.js';
+import { NameScene } from './NameScene.js';
 import { SelectScene } from './SelectScene.js';
 import { FightScene } from './FightScene.js';
 import { ResultScene } from './ResultScene.js';
@@ -18,7 +19,7 @@ const config = {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: [TitleScene, SelectScene, FightScene, ResultScene],
+  scene: [TitleScene, NameScene, SelectScene, FightScene, ResultScene],
   callbacks: {
     preBoot: (game) => {
       game.registry.set('socket', socket);

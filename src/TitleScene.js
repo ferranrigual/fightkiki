@@ -68,7 +68,7 @@ export class TitleScene extends Phaser.Scene {
       this.tweens.add({ targets: waiting, alpha: 0.2, duration: 800, yoyo: true, repeat: -1 });
 
       this.socket.once('opponent-joined', () => {
-        this.scene.start('SelectScene', { player: 'p1' });
+        this.scene.start('NameScene', { player: 'p1' });
       });
     });
   }
@@ -123,7 +123,7 @@ export class TitleScene extends Phaser.Scene {
           return;
         }
         input.remove();
-        this.scene.start('SelectScene', { player: 'p2' });
+        this.scene.start('NameScene', { player: 'p2' });
       });
     });
 

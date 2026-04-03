@@ -11,6 +11,8 @@ export class FightScene extends Phaser.Scene {
     this.p1Moves = data.p1Moves;
     this.p2Moves = data.p2Moves;
     this.localPlayer = data.localPlayer; // 'p1' or 'p2'
+    this.p1Name = data.p1Name || 'Player 1';
+    this.p2Name = data.p2Name || 'Player 2';
     this.p1Score = 0;
     this.p2Score = 0;
     this.currentRound = 0;
@@ -23,14 +25,14 @@ export class FightScene extends Phaser.Scene {
     this.add.rectangle(400, 500, 800, 200, 0x2d2d2d);
     this.add.rectangle(400, 500, 780, 4, 0x444444).setOrigin(0.5, 0);
 
-    // Player labels — highlight local player as "You"
-    const p1Label = this.localPlayer === 'p1' ? 'You (P1)' : 'Player 1';
-    const p2Label = this.localPlayer === 'p2' ? 'You (P2)' : 'Player 2';
+    // Player labels — highlight local player with "(You)"
+    const p1Label = this.localPlayer === 'p1' ? `${this.p1Name} (You)` : this.p1Name;
+    const p2Label = this.localPlayer === 'p2' ? `${this.p2Name} (You)` : this.p2Name;
 
-    this.add.text(150, 30, p1Label, {
+    this.p1LabelText = this.add.text(150, 30, p1Label, {
       fontSize: '24px', fontFamily: 'Arial', color: '#4fc3f7', fontStyle: 'bold',
     }).setOrigin(0.5);
-    this.add.text(650, 30, p2Label, {
+    this.p2LabelText = this.add.text(650, 30, p2Label, {
       fontSize: '24px', fontFamily: 'Arial', color: '#ef5350', fontStyle: 'bold',
     }).setOrigin(0.5);
 
@@ -114,6 +116,8 @@ export class FightScene extends Phaser.Scene {
         this.scene.start('ResultScene', {
           p1Score: this.p1Score,
           p2Score: this.p2Score,
+          p1Name: this.p1Name,
+          p2Name: this.p2Name,
         });
       });
       return;
@@ -146,11 +150,11 @@ export class FightScene extends Phaser.Scene {
 
       if (result === 'p1') {
         this.p1Score++;
-        this.resultText.setText('Player 1 scores!').setColor('#4fc3f7');
+        this.resultText.setText(`${this.p1Name} scores!`).setColor('#4fc3f7');
         this.animateHit(this.p2Fighter);
       } else if (result === 'p2') {
         this.p2Score++;
-        this.resultText.setText('Player 2 scores!').setColor('#ef5350');
+        this.resultText.setText(`${this.p2Name} scores!`).setColor('#ef5350');
         this.animateHit(this.p1Fighter);
       } else {
         this.resultText.setText('Tie!').setColor('#ffd700');

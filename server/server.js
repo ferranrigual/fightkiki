@@ -29,7 +29,7 @@ io.on('connection', (socket) => {
     let code;
     do { code = generateCode(); } while (rooms[code]);
 
-    rooms[code] = { p1SocketId: socket.id, p2SocketId: null, p1Moves: null, p2Moves: null };
+    rooms[code] = { p1SocketId: socket.id, p2SocketId: null, p1Moves: null, p2Moves: null, p1Name: null, p2Name: null };
     socket.join(code);
     socket.data.code = code;
     socket.data.player = 'p1';
@@ -60,6 +60,26 @@ io.on('connection', (socket) => {
     callback({ ok: true });
   });
 
+  // A player submits their name
+  socket.on('submit-name', (name) => {
+    const room = rooms[socket.data.code];
+    const player = socket.data.player;
+
+    if (!room || typeof name !== 'string') return;
+
+    room[`${player}Name`] = name.trim().slice(0, 20) || `Player ${player === 'p1' ? 1 : 2}`;
+    console.log(`Room ${socket.data.code}: ${player} set name to "${room[`${player}Name`]}"`);
+
+    // Both names submitted — notify both players
+    if (room.p1Name && room.p2Name) {
+      io.to(socket.data.code).emit('names-ready', {
+        p1Name: room.p1Name,
+        p2Name: room.p2Name,
+      });
+      console.log(`Room ${socket.data.code}: names ready`);
+    }
+  });
+
   // A player submits their moves
   socket.on('submit-moves', (moves) => {
     const code = socket.data.code;
@@ -76,6 +96,8 @@ io.on('connection', (socket) => {
       io.to(code).emit('start-fight', {
         p1Moves: room.p1Moves,
         p2Moves: room.p2Moves,
+        p1Name: room.p1Name,
+        p2Name: room.p2Name,
       });
       console.log(`Room ${code}: fight started`);
     }
