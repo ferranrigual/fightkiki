@@ -6,13 +6,9 @@ import { SelectScene } from './SelectScene.js';
 import { FightScene } from './FightScene.js';
 import { ResultScene } from './ResultScene.js';
 
-// Single shared socket for all scenes
-// Use Railway backend in production, localhost in dev
-const socketUrl = window.location.hostname === 'localhost'
-  ? 'http://localhost:3000'
-  : 'https://fightkiki.up.railway.app';
-
-const socket = io(socketUrl);
+// Single shared socket — connects to same origin in production,
+// proxied to localhost:3000 in dev via vite.config.js
+const socket = io();
 
 const config = {
   type: Phaser.AUTO,
