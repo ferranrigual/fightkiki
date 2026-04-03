@@ -19,9 +19,11 @@ app.use((req, res, next) => {
 
 const io = new Server(httpServer, {
   cors: {
-    origin: '*',
+    origin: ['https://fightkiki.vercel.app', 'http://localhost:3000', 'http://localhost:5173'],
     methods: ['GET', 'POST'],
+    credentials: true,
   },
+  allowEIO3: true,
 });
 
 // rooms: { [code]: { p1SocketId, p2SocketId, p1Moves, p2Moves } }
