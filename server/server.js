@@ -5,6 +5,9 @@ import { Server } from 'socket.io';
 const app = express();
 const httpServer = createServer(app);
 
+// Server startup timestamp
+const serverStartTime = new Date().toISOString();
+
 // Enable CORS for Express
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
@@ -15,6 +18,14 @@ app.use((req, res, next) => {
   } else {
     next();
   }
+});
+
+// Version endpoint
+app.get('/api/version', (req, res) => {
+  res.json({
+    timestamp: serverStartTime,
+    currentTime: new Date().toISOString(),
+  });
 });
 
 const io = new Server(httpServer, {

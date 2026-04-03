@@ -13,9 +13,37 @@
       align-items: center;
       height: 100vh;
     }
+    #version {
+      position: fixed;
+      bottom: 8px;
+      right: 8px;
+      font-size: 10px;
+      color: #666;
+      font-family: monospace;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 4px 8px;
+      border-radius: 4px;
+      z-index: 9999;
+    }
   </style>
 </head>
 <body>
+  <div id="version">Loading version...</div>
+  <script>
+    // Fetch version from backend
+    const socketUrl = window.location.hostname === 'localhost'
+      ? 'http://localhost:3000'
+      : 'https://fightkiki.up.railway.app';
+
+    fetch(`${socketUrl}/api/version`)
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById('version').textContent = `Server: ${data.timestamp}`;
+      })
+      .catch(() => {
+        document.getElementById('version').textContent = 'Version: unavailable';
+      });
+  </script>
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>
