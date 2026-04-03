@@ -9,73 +9,70 @@ export class SelectScene extends Phaser.Scene {
   }
 
   init(data) {
-    this.playerNumber = data.playerNumber;
-    this.p1Moves = data.p1Moves || [];
-    this.p2Moves = data.p2Moves || [];
+    this.player = data.player; // 'p1' or 'p2'
     this.selectedMoves = [];
-    this.isHandoff = data.isHandoff || false;
   }
 
   create() {
-    if (this.isHandoff) {
-      this.showHandoff();
-      return;
-    }
+    this.socket = this.registry.get('socket');
 
     // Header
-    this.add.text(400, 40, `Player ${this.playerNumber} - Choose Your Moves`, {
-      fontSize: '32px',
-      fontFamily: 'Arial',
-      color: this.playerNumber === 1 ? '#4fc3f7' : '#ef5350',
-      fontStyle: 'bold',
+    const color = this.player === 'p1' ? '#4fc3f7' : '#ef5350';
+    const label = this.player === 'p1' ? 'Player 1' : 'Player 2';
+
+    this.add.text(400, 40, `${label} - Choose Your Moves`, {
+      fontSize: '30px', fontFamily: 'Arial', color, fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.add.text(400, 80, `Pick ${TOTAL_MOVES} moves in order`, {
-      fontSize: '18px',
-      fontFamily: 'Arial',
-      color: '#aaa',
+      fontSize: '18px', fontFamily: 'Arial', color: '#aaa',
     }).setOrigin(0.5);
 
     // Move buttons
+    this.moveButtons = [];
     MOVE_LIST.forEach((move, i) => {
-      const y = 180 + i * 90;
+      const y = 175 + i * 90;
       const btn = this.add.rectangle(400, y, 300, 65, Phaser.Display.Color.HexStringToColor(MOVE_COLORS[move]).color)
         .setInteractive({ useHandCursor: true });
 
       this.add.text(400, y, `${MOVE_EMOJIS[move]}  ${move}`, {
-        fontSize: '28px',
-        fontFamily: 'Arial',
-        color: '#fff',
-        fontStyle: 'bold',
+        fontSize: '28px', fontFamily: 'Arial', color: '#fff', fontStyle: 'bold',
       }).setOrigin(0.5);
 
       btn.on('pointerover', () => btn.setAlpha(0.8));
       btn.on('pointerout', () => btn.setAlpha(1));
       btn.on('pointerdown', () => this.addMove(move));
+      this.moveButtons.push(btn);
     });
 
-    // Sequence display
+    // Sequence slots
     this.sequenceTexts = [];
     for (let i = 0; i < TOTAL_MOVES; i++) {
       const x = 160 + i * 120;
       const bg = this.add.rectangle(x, 490, 100, 50, 0x333333, 0.6).setStrokeStyle(2, 0x666666);
       const txt = this.add.text(x, 490, `${i + 1}.  --`, {
-        fontSize: '18px',
-        fontFamily: 'Arial',
-        color: '#888',
+        fontSize: '18px', fontFamily: 'Arial', color: '#888',
       }).setOrigin(0.5);
       this.sequenceTexts.push({ bg, txt });
     }
 
     // Undo button
     this.undoBtn = this.add.text(400, 555, 'Undo', {
-      fontSize: '20px',
-      fontFamily: 'Arial',
-      color: '#aaa',
+      fontSize: '20px', fontFamily: 'Arial', color: '#aaa',
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     this.undoBtn.on('pointerdown', () => this.undoMove());
     this.undoBtn.on('pointerover', () => this.undoBtn.setColor('#fff'));
     this.undoBtn.on('pointerout', () => this.undoBtn.setColor('#aaa'));
+
+    // Listen for opponent disconnect
+    this.socket.once('opponent-disconnected', () => {
+      this.showDisconnected();
+    });
+
+    // Listen for fight start (in case server sends it while we're still here)
+    this.socket.once('start-fight', (data) => {
+      this.scene.start('FightScene', { ...data, localPlayer: this.player });
+    });
   }
 
   addMove(move) {
@@ -95,15 +92,12 @@ export class SelectScene extends Phaser.Scene {
 
   undoMove() {
     if (this.selectedMoves.length === 0) return;
-
-    // Remove confirm button if it exists
     if (this.confirmBtn) {
       this.confirmBtn.destroy();
       this.confirmText.destroy();
       this.confirmBtn = null;
       this.confirmText = null;
     }
-
     this.selectedMoves.pop();
     const idx = this.selectedMoves.length;
     const slot = this.sequenceTexts[idx];
@@ -113,66 +107,42 @@ export class SelectScene extends Phaser.Scene {
   }
 
   showConfirm() {
-    this.confirmBtn = this.add.rectangle(400, 555, 200, 50, 0x27ae60).setInteractive({ useHandCursor: true });
-    this.confirmText = this.add.text(400, 555, 'Confirm!', {
-      fontSize: '24px',
-      fontFamily: 'Arial',
-      color: '#fff',
-      fontStyle: 'bold',
+    this.confirmBtn = this.add.rectangle(400, 555, 220, 50, 0x27ae60).setInteractive({ useHandCursor: true });
+    this.confirmText = this.add.text(400, 555, 'Lock In!', {
+      fontSize: '24px', fontFamily: 'Arial', color: '#fff', fontStyle: 'bold',
     }).setOrigin(0.5);
 
     this.confirmBtn.on('pointerover', () => this.confirmBtn.setFillStyle(0x2ecc71));
     this.confirmBtn.on('pointerout', () => this.confirmBtn.setFillStyle(0x27ae60));
-    this.confirmBtn.on('pointerdown', () => this.confirmSelection());
+    this.confirmBtn.on('pointerdown', () => this.submitMoves());
   }
 
-  confirmSelection() {
-    if (this.playerNumber === 1) {
-      // Go to handoff, then P2 selects
-      this.scene.start('SelectScene', {
-        playerNumber: 2,
-        p1Moves: this.selectedMoves,
-        p2Moves: [],
-        isHandoff: true,
-      });
-    } else {
-      // Both players done — start fight
-      this.scene.start('FightScene', {
-        p1Moves: this.p1Moves,
-        p2Moves: this.selectedMoves,
-      });
-    }
+  submitMoves() {
+    // Disable all interaction while waiting
+    this.moveButtons.forEach(b => b.disableInteractive());
+    this.undoBtn.disableInteractive();
+    this.confirmBtn.disableInteractive();
+    this.confirmBtn.setFillStyle(0x555555);
+    this.confirmText.setText('Waiting...');
+
+    this.socket.emit('submit-moves', this.selectedMoves);
+
+    // Show waiting overlay
+    this.add.rectangle(400, 555, 400, 50, 0x1a1a2e).setOrigin(0.5);
+    const waitTxt = this.add.text(400, 555, 'Waiting for opponent...', {
+      fontSize: '20px', fontFamily: 'Arial', color: '#888',
+    }).setOrigin(0.5);
+    this.tweens.add({ targets: waitTxt, alpha: 0.2, duration: 800, yoyo: true, repeat: -1 });
   }
 
-  showHandoff() {
-    this.add.text(400, 250, 'Pass to Player 2', {
-      fontSize: '40px',
-      fontFamily: 'Arial',
-      color: '#ef5350',
-      fontStyle: 'bold',
+  showDisconnected() {
+    this.add.rectangle(400, 300, 500, 150, 0x000000, 0.85).setOrigin(0.5);
+    this.add.text(400, 285, 'Opponent disconnected', {
+      fontSize: '26px', fontFamily: 'Arial', color: '#e94560', fontStyle: 'bold',
     }).setOrigin(0.5);
 
-    this.add.text(400, 320, "(Don't let Player 1 peek!)", {
-      fontSize: '20px',
-      fontFamily: 'Arial',
-      color: '#aaa',
-    }).setOrigin(0.5);
-
-    const readyBtn = this.add.rectangle(400, 420, 240, 60, 0xef5350).setInteractive({ useHandCursor: true });
-    this.add.text(400, 420, "I'm Ready", {
-      fontSize: '28px',
-      fontFamily: 'Arial',
-      color: '#fff',
-      fontStyle: 'bold',
-    }).setOrigin(0.5);
-
-    readyBtn.on('pointerdown', () => {
-      this.scene.start('SelectScene', {
-        playerNumber: 2,
-        p1Moves: this.p1Moves,
-        p2Moves: [],
-        isHandoff: false,
-      });
-    });
+    const backBtn = this.add.rectangle(400, 340, 200, 45, 0x444444).setInteractive({ useHandCursor: true });
+    this.add.text(400, 340, 'Back to Menu', { fontSize: '20px', fontFamily: 'Arial', color: '#fff' }).setOrigin(0.5);
+    backBtn.on('pointerdown', () => this.scene.start('TitleScene'));
   }
 }

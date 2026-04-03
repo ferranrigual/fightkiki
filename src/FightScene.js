@@ -10,23 +10,41 @@ export class FightScene extends Phaser.Scene {
   init(data) {
     this.p1Moves = data.p1Moves;
     this.p2Moves = data.p2Moves;
+    this.localPlayer = data.localPlayer; // 'p1' or 'p2'
     this.p1Score = 0;
     this.p2Score = 0;
     this.currentRound = 0;
   }
 
   create() {
+    this.socket = this.registry.get('socket');
+
     // Arena background
     this.add.rectangle(400, 500, 800, 200, 0x2d2d2d);
     this.add.rectangle(400, 500, 780, 4, 0x444444).setOrigin(0.5, 0);
 
-    // Player labels
-    this.add.text(150, 30, 'Player 1', {
+    // Player labels — highlight local player as "You"
+    const p1Label = this.localPlayer === 'p1' ? 'You (P1)' : 'Player 1';
+    const p2Label = this.localPlayer === 'p2' ? 'You (P2)' : 'Player 2';
+
+    this.add.text(150, 30, p1Label, {
       fontSize: '24px', fontFamily: 'Arial', color: '#4fc3f7', fontStyle: 'bold',
     }).setOrigin(0.5);
-    this.add.text(650, 30, 'Player 2', {
+    this.add.text(650, 30, p2Label, {
       fontSize: '24px', fontFamily: 'Arial', color: '#ef5350', fontStyle: 'bold',
     }).setOrigin(0.5);
+
+    // Handle opponent leaving mid-fight
+    this.socket.once('opponent-disconnected', () => {
+      this.time.removeAllEvents();
+      this.add.rectangle(400, 300, 500, 120, 0x000000, 0.85).setOrigin(0.5);
+      this.add.text(400, 285, 'Opponent disconnected', {
+        fontSize: '26px', fontFamily: 'Arial', color: '#e94560', fontStyle: 'bold',
+      }).setOrigin(0.5);
+      const backBtn = this.add.rectangle(400, 335, 200, 45, 0x444444).setInteractive({ useHandCursor: true });
+      this.add.text(400, 335, 'Back to Menu', { fontSize: '20px', fontFamily: 'Arial', color: '#fff' }).setOrigin(0.5);
+      backBtn.on('pointerdown', () => this.scene.start('TitleScene'));
+    });
 
     // Score displays
     this.p1ScoreText = this.add.text(150, 60, 'Score: 0', {
