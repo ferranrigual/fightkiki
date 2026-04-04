@@ -2,6 +2,12 @@
 
 A networked two-player web-based fighting game built with **Phaser 3**, **Vite**, and **Socket.io**.
 
+
+
+https://github.com/user-attachments/assets/70c2cfbb-5ef5-4440-99d8-b1f248310b8a
+
+
+
 ## Game Overview
 
 Fight Kiki is a turn-based combat game where two players secretly choose sequences of 5 moves each, then watch them resolve in real-time. Combat uses rock-paper-scissors mechanics: **Punch** beats **Low Kick**, **Low Kick** beats **Defend**, **Defend** beats **Punch**.
